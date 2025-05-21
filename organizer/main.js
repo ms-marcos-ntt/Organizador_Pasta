@@ -1,6 +1,7 @@
 const { app, BrowserWindow, Menu, Tray, dialog } = require('electron');
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
+const axios = require('axios');
 const monitorarDownloads = require('./monitor');
 
 let tray = null;

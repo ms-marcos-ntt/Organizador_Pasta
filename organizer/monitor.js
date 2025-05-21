@@ -1,4 +1,7 @@
 const os = require('os');
+const fs = require('fs');
+const path = require('path');
+const axios = require('axios');
 const DOWNLOADS_DIR = path.join(os.homedir(), 'Downloads');
 const ORGANIZADO_DIR = path.join(os.homedir(), 'Documentos', 'DownloadsOrganizados');
 const INTERVALO_MINUTOS = 10;

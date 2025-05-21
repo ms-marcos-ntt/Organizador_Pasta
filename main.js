@@ -11,7 +11,7 @@ const ORGANIZADO_DIR = path.join(
   "Documentos",
   "DownloadsOrganizados"
 );
-const INTERVALO_MINUTOS = 10;
+const INTERVALO_MINUTOS = 10; // Intervalo de verificação em minutos
 const LIMITE_ARQUIVOS = 50;
 const LIMITE_DIAS = 1;
 

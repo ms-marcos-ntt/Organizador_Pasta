@@ -6,12 +6,13 @@ const { exec } = require("child_process");
 const DOWNLOADS_DIR = path.join(os.homedir(), "Downloads");
 const ORGANIZADO_DIR = path.join(
   os.homedir(),
+  "OneDrive - B R A SERVICOS DE COMUNICACAO LTDA",
   "Documentos",
   "DownloadsOrganizados"
 );
 const INTERVALO_MINUTOS = 10;
 const LIMITE_ARQUIVOS = 50;
-const LIMITE_DIAS = 7;
+const LIMITE_DIAS = 1;
 
 function diasDesde(data) {
   const agora = new Date();

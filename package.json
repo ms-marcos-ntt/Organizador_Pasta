@@ -2,5 +2,14 @@
   "dependencies": {
     "fs": "^0.0.1-security",
     "os": "^0.1.2"
+  },
+  "devDependencies": {
+    "electron": "^36.2.1"
+  },
+  "name": "organizador-downloads",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
   }
 }

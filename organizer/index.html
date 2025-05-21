@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Configuração do Bot</title>
+  </head>
+  <body>
+    <h2>Configurar Telegram</h2>
+    <label>Token do Bot:</label><br>
+    <input id="token" /><br>
+    <label>ID do Chat:</label><br>
+    <input id="chat" /><br>
+    <button onclick="salvar()">Salvar</button>
+
+    <script>
+      const fs = require('fs');
+      const path = require('path');
+      const configPath = path.join(__dirname, 'config.json');
+
+      function salvar() {
+        const token = document.getElementById('token').value;
+        const chat = document.getElementById('chat').value;
+        fs.writeFileSync(configPath, JSON.stringify({ telegram_token: token, chat_id: chat }, null, 2));
+        alert('Configurações salvas!');
+      }
+
+      // Carrega config existente
+      if (fs.existsSync(configPath)) {
+        const config = JSON.parse(fs.readFileSync(configPath));
+        document.getElementById('token').value = config.telegram_token || '';
+        document.getElementById('chat').value = config.chat_id || '';
+      }
+    </script>
+  </body>
+</html>

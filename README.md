@@ -8,9 +8,9 @@ Um app simples feito em Node.js + Electron que monitora automaticamente a pasta 
 
 ```bash
 Organizador_Pasta/
-├── dist/                      # Pasta gerada após empacotamento
 ├── node_modules/
 ├── organizer/
+│   ├── dist/                  # Pasta gerada após empacotamento
 │   ├── main.js                # Entrada principal do Electron
 │   ├── monitor.js             # Script de monitoramento e organização
 │   ├── preload.js             # Comunicação entre Electron e HTML
@@ -121,12 +121,3 @@ shell:startup
 
 **Marcos Santos**
 Organizador criado por necessidade, evoluído por capricho.
-
----
-
-```
-
----
-
-Se quiser, posso já te gerar esse arquivo salvo com o nome `README.md` e te passar para colar direto no projeto. Quer?
-```

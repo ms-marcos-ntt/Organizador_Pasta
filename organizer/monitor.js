@@ -2,13 +2,12 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const { exec } = require("child_process");
+require("dotenv").config();
 
 const DOWNLOADS_DIR = path.join(os.homedir(), "Downloads");
 const ORGANIZADO_DIR = path.join(
   os.homedir(),
-  "OneDrive - B R A SERVICOS DE COMUNICACAO LTDA",
-  "Documentos",
-  "DownloadsOrganizados"
+  process.env.DESTINO_DOWNLOADS
 );
 const INTERVALO_MINUTOS = 10;
 const LIMITE_ARQUIVOS = 50;

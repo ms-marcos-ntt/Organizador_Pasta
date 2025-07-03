@@ -12,10 +12,9 @@ let tray = null;
 const DOWNLOADS_DIR = path.join(os.homedir(), "Downloads");
 const ORGANIZADO_DIR = path.join(
   os.homedir(),
-  "OneDrive - B R A SERVICOS DE COMUNICACAO LTDA",
-  "Documentos",
-  "DownloadsOrganizados"
+  process.env.DESTINO_DOWNLOADS
 );
+
 const INTERVALO_MINUTOS = 10; // Intervalo de verificação em minutos
 const LIMITE_ARQUIVOS = 50;
 const LIMITE_DIAS = 1;

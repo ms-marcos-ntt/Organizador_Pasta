@@ -3,6 +3,11 @@ const path = require("path");
 const fs = require("fs");
 const os = require("os");
 const { exec } = require("child_process");
+require("dotenv").config();
+const { Tray, Menu } = require("electron");
+
+let tray = null;
+
 
 const DOWNLOADS_DIR = path.join(os.homedir(), "Downloads");
 const ORGANIZADO_DIR = path.join(
@@ -83,13 +88,39 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 600,
     height: 400,
+    show: false, // Não mostra imediatamente
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
     },
   });
 
   mainWindow.loadFile("index.html");
+
+  // Minimizar em vez de fechar
+  mainWindow.on("close", (event) => {
+    event.preventDefault();
+    mainWindow.hide();
+  });
+
+  // Criar bandeja
+  tray = new Tray(path.join(__dirname, "icon.png")); // coloque um ícone .png aqui
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: "Mostrar",
+      click: () => mainWindow.show(),
+    },
+    {
+      label: "Sair",
+      click: () => {
+        tray.destroy();
+        app.quit();
+      },
+    },
+  ]);
+  tray.setToolTip("Organizador de Downloads");
+  tray.setContextMenu(contextMenu);
 }
+
 
 app.whenReady().then(() => {
   createWindow();

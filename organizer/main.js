@@ -3,7 +3,8 @@ const path = require("path");
 const fs = require("fs");
 const os = require("os");
 const { exec } = require("child_process");
-require("dotenv").config();
+const dotenvPath = path.join(__dirname, ".env");
+require("dotenv").config({ path: dotenvPath });
 const { Tray, Menu } = require("electron");
 
 let tray = null;

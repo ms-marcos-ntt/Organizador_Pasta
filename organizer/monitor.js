@@ -2,7 +2,8 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const { exec } = require("child_process");
-require("dotenv").config();
+const dotenvPath = path.join(__dirname, ".env");
+require("dotenv").config({ path: dotenvPath });
 
 const DOWNLOADS_DIR = path.join(os.homedir(), "Downloads");
 const ORGANIZADO_DIR = path.join(

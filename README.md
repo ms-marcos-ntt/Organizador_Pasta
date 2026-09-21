@@ -45,36 +45,40 @@ npm start
 
 ---
 
-## 📦 Empacotando como EXE (Windows)
+## 📦 Gerando o EXE do Windows
 
-1. Instale o empacotador:
-
-```bash
-npm install --save-dev electron-packager
-```
-
-2. Adicione o script ao `package.json`:
-
-```json
-"scripts": {
-  "start": "electron .",
-  "package": "electron-packager . organizador-downloads --platform=win32 --arch=x64 --out=dist --overwrite"
-}
-```
-
-3. Empacote com:
+No terminal, entre na pasta `organizer` e instale as dependências uma vez:
 
 ```bash
-npm run package
+cd organizer
+npm install
 ```
 
-4. Abra a pasta:
+Antes de empacotar, crie o arquivo de configuração:
 
 ```bash
-dist/organizador-downloads-win32-x64/
+copy .env.example .env
 ```
 
-E execute o `organizador-downloads.exe`.
+Edite o `.env` e configure `DESTINO_DOWNLOADS` com a pasta de destino dentro da sua pasta de usuário. Depois, execute:
+
+```bash
+npm run instalador:windowns
+```
+
+O comando valida o `.env`, gera o aplicativo Windows e informa o caminho completo do executável ao terminar. O arquivo ficará em:
+
+```text
+organizer/dist/organizador-downloads-win32-x64/organizador-downloads.exe
+```
+
+Também é possível usar o nome corrigido:
+
+```bash
+npm run instalador:windows
+```
+
+O comando antigo `npm run package` continua disponível como atalho para o mesmo processo.
 
 ---
 

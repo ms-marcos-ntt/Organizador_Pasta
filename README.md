@@ -82,6 +82,20 @@ O comando antigo `npm run package` continua disponível como atalho para o mesmo
 
 ---
 
+## 🐞 Diagnóstico e logs
+
+Se o aplicativo apresentar algum erro, abra a janela pelo ícone na bandeja. Ela mostra os eventos em tempo real e possui o botão `Copiar debug` para copiar tudo e enviar para análise.
+
+Os registros também são salvos automaticamente em:
+
+```text
+%APPDATA%/organizador-downloads/logs/organizador-debug.log
+```
+
+Erros não tratados do aplicativo também são registrados nesse arquivo, junto com data, horário e nível do erro.
+
+---
+
 ## 🚀 Colocar na inicialização do Windows
 
 1. Pressione `Win + R` e digite:

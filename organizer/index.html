@@ -1,14 +1,61 @@
 <!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"><title>Organizador de Downloads</title></head>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Organizador de Downloads — Debug</title>
+  <style>
+    :root { color-scheme: dark; font-family: "Segoe UI", sans-serif; }
+    body { margin: 0; background: #111827; color: #e5e7eb; }
+    header { padding: 18px 22px 14px; border-bottom: 1px solid #374151; }
+    h1 { margin: 0 0 6px; font-size: 20px; }
+    p { margin: 0; color: #9ca3af; font-size: 12px; }
+    .toolbar { display: flex; gap: 8px; padding: 12px 22px; }
+    button { border: 0; border-radius: 5px; padding: 8px 12px; background: #2563eb; color: white; cursor: pointer; }
+    button.secondary { background: #374151; }
+    #status { margin-left: auto; color: #86efac; font-size: 12px; align-self: center; }
+    #terminal { box-sizing: border-box; margin: 0 22px 22px; padding: 14px; height: 285px; overflow: auto; background: #030712; border: 1px solid #374151; border-radius: 6px; white-space: pre-wrap; font: 12px/1.5 Consolas, monospace; }
+    .log-info { color: #d1d5db; }
+    .log-warn { color: #fde68a; }
+    .log-error { color: #fca5a5; }
+  </style>
+</head>
 <body>
-  <h1 style="background:#000;color:#0f0;">Organizador de Downloads</h1>
-  <pre id="terminal" style="background:#000;color:#0f0;padding:10px;height:300px;overflow:auto;"></pre>
+  <header>
+    <h1>Organizador de Downloads</h1>
+    <p>Console de diagnóstico — os registros também são salvos em arquivo.</p>
+  </header>
+  <div class="toolbar">
+    <button id="copy">Copiar debug</button>
+    <button id="clear" class="secondary">Limpar tela</button>
+    <span id="status">Aguardando logs...</span>
+  </div>
+  <pre id="terminal" aria-label="Logs de diagnóstico"></pre>
   <script>
     const terminal = document.getElementById("terminal");
-    window.electronAPI.onLog((msg) => {
-      terminal.textContent += msg + "\n";
+    const status = document.getElementById("status");
+    const logs = [];
+
+    function adicionarLog(evento) {
+      const nivel = evento.nivel || "INFO";
+      const linha = `[${evento.timestamp || new Date().toISOString()}] [${nivel}] ${evento.mensagem}`;
+      logs.push(linha);
+      terminal.textContent += `${linha}\n`;
       terminal.scrollTop = terminal.scrollHeight;
+      status.textContent = `${logs.length} registro(s) — ${nivel}`;
+      status.style.color = nivel === "ERROR" ? "#fca5a5" : "#86efac";
+    }
+
+    window.electronAPI.onLog(adicionarLog);
+
+    document.getElementById("copy").addEventListener("click", async () => {
+      await navigator.clipboard.writeText(logs.join("\n"));
+      status.textContent = "Debug copiado para a área de transferência";
+    });
+
+    document.getElementById("clear").addEventListener("click", () => {
+      terminal.textContent = "";
+      status.textContent = "Tela limpa — novos logs continuarão sendo salvos";
     });
   </script>
 </body>

@@ -17,10 +17,21 @@ const MAX_LOGS_IN_MEMORY = 500;
 
 
 const DOWNLOADS_DIR = path.join(os.homedir(), "Downloads");
-const ORGANIZADO_DIR = path.join(
-  os.homedir(),
-  process.env.DESTINO_DOWNLOADS
-);
+
+function resolverDiretorioOrganizado() {
+  const configurado = process.env.DESTINO_DOWNLOADS?.trim();
+  if (!configurado) {
+    throw new Error("DESTINO_DOWNLOADS não está configurado no arquivo .env");
+  }
+
+  // Caminhos absolutos devem ser usados como estão. Só caminhos relativos
+  // são colocados dentro da pasta do usuário.
+  return path.isAbsolute(configurado)
+    ? path.normalize(configurado)
+    : path.join(os.homedir(), configurado);
+}
+
+const ORGANIZADO_DIR = resolverDiretorioOrganizado();
 
 const INTERVALO_MINUTOS = 10; // Intervalo de verificação em minutos
 const LIMITE_ARQUIVOS = 50;
@@ -104,36 +115,77 @@ function moverArquivoParaTipo(arquivo) {
   const destino = path.join(destinoDir, arquivo);
 
   fs.rename(origem, destino, (err) => {
-    if (err) registrarErro(`Erro movendo ${arquivo}`, err);
-    else enviarLog(`📦 Movido: ${arquivo} → /${ext}`);
+    if (!err) {
+      enviarLog(`📦 Movido: ${arquivo} → /${ext}`);
+      return;
+    }
+
+    // rename não funciona entre volumes (por exemplo, Downloads no C: e
+    // destino no D:). Nesse caso, copia primeiro e só remove a origem após
+    // a cópia terminar com sucesso.
+    if (err.code !== "EXDEV") {
+      registrarErro(`Erro movendo ${arquivo}`, err);
+      return;
+    }
+
+    fs.copyFile(origem, destino, fs.constants.COPYFILE_EXCL, (copyError) => {
+      if (copyError) {
+        if (copyError.code === "EEXIST") {
+          enviarLog(`Ignorado: ${arquivo} já existe em /${ext}.`, "INFO");
+          return;
+        }
+        registrarErro(`Erro copiando ${arquivo} para /${ext}`, copyError);
+        return;
+      }
+
+      fs.unlink(origem, (unlinkError) => {
+        if (unlinkError) {
+          registrarErro(`Arquivo copiado, mas não foi possível remover a origem de ${arquivo}`, unlinkError);
+          return;
+        }
+        enviarLog(`📦 Movido entre volumes: ${arquivo} → /${ext}`);
+      });
+    });
   });
 }
 
 function verificarDownloads() {
-  fs.readdir(DOWNLOADS_DIR, (err, arquivos) => {
+  fs.readdir(DOWNLOADS_DIR, { withFileTypes: true }, (err, entradas) => {
     if (err) return registrarErro("Erro lendo a pasta Downloads", err);
 
+    const arquivos = entradas.filter((entrada) => entrada.isFile()).map((entrada) => entrada.name);
     let muitosArquivos = arquivos.length > LIMITE_ARQUIVOS;
     let arquivosAntigos = 0;
+    let analisesPendentes = arquivos.length;
+
+    const finalizarAnalise = () => {
+      analisesPendentes--;
+      if (analisesPendentes > 0) return;
+
+      if (muitosArquivos || arquivosAntigos > 5) {
+        notificar("🧹 Pasta Downloads organizada automaticamente!");
+      } else {
+        enviarLog(`[${new Date().toLocaleTimeString()}] Downloads em ordem.`);
+      }
+    };
+
+    if (analisesPendentes === 0) return finalizarAnalise();
 
     arquivos.forEach((arquivo) => {
       const caminho = path.join(DOWNLOADS_DIR, arquivo);
-      try {
-        const stats = fs.statSync(caminho);
+      fs.stat(caminho, (statError, stats) => {
+        if (statError) {
+          registrarErro(`Erro analisando ${arquivo}`, statError);
+          finalizarAnalise();
+          return;
+        }
         if (stats.isFile() && diasDesde(stats.mtime) > LIMITE_DIAS) {
           arquivosAntigos++;
           moverArquivoParaTipo(arquivo);
         }
-      } catch (error) {
-        registrarErro(`Erro analisando ${arquivo}`, error);
-      }
+        finalizarAnalise();
+      });
     });
-
-    if (muitosArquivos || arquivosAntigos > 5) {
-      notificar("🧹 Pasta Downloads organizada automaticamente!");
-    } else {
-      enviarLog(`[${new Date().toLocaleTimeString()}] Downloads em ordem.`);
-    }
   });
 }
 
@@ -151,9 +203,12 @@ function notificar(msg) {
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 600,
-    height: 400,
-    show: false, // Não mostra imediatamente
+    width: 900,
+    height: 650,
+    minWidth: 420,
+    minHeight: 420,
+    show: false,
+    backgroundColor: "#0b1120",
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
     },
@@ -166,6 +221,19 @@ function createWindow() {
       nivel: "INFO",
       mensagem: `Arquivo de log: ${logFilePath}`,
     });
+    mainWindow.show();
+  });
+
+  mainWindow.webContents.on("did-fail-load", (_, errorCode, errorDescription, validatedURL) => {
+    registrarErro(`Falha carregando a interface (${errorCode}) em ${validatedURL}`, errorDescription);
+  });
+
+  mainWindow.webContents.on("render-process-gone", (_, details) => {
+    registrarErro("Processo da interface encerrado", details);
+  });
+
+  mainWindow.webContents.on("console-message", (_, level, message, line, sourceId) => {
+    if (level >= 2) enviarLog(`Interface: ${message} (${sourceId}:${line})`, "ERROR");
   });
 
   mainWindow.loadFile(path.join(__dirname, "index.html"));
@@ -217,7 +285,9 @@ app.whenReady().then(() => {
   createWindow();
   enviarLog(`👀 Monitorando pasta Downloads a cada ${INTERVALO_MINUTOS} minutos...`);
   enviarLog(`📝 Logs salvos em: ${logFilePath}`);
-  verificarDownloads();
+  // Primeiro entrega a janela ao usuário; a varredura pode ser pesada em
+  // pastas com muitos arquivos e não deve atrasar a abertura da interface.
+  setTimeout(verificarDownloads, 250);
   monitorInterval = setInterval(verificarDownloads, INTERVALO_MINUTOS * 60 * 1000);
 }).catch((error) => {
   registrarErro("Erro ao iniciar o aplicativo", error);

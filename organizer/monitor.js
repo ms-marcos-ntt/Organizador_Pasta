@@ -6,10 +6,19 @@ const dotenvPath = path.join(__dirname, ".env");
 require("dotenv").config({ path: dotenvPath });
 
 const DOWNLOADS_DIR = path.join(os.homedir(), "Downloads");
-const ORGANIZADO_DIR = path.join(
-  os.homedir(),
-  process.env.DESTINO_DOWNLOADS
-);
+
+function resolverDiretorioOrganizado() {
+  const configurado = process.env.DESTINO_DOWNLOADS?.trim();
+  if (!configurado) {
+    throw new Error("DESTINO_DOWNLOADS não está configurado no arquivo .env");
+  }
+
+  return path.isAbsolute(configurado)
+    ? path.normalize(configurado)
+    : path.join(os.homedir(), configurado);
+}
+
+const ORGANIZADO_DIR = resolverDiretorioOrganizado();
 const INTERVALO_MINUTOS = 10;
 const LIMITE_ARQUIVOS = 50;
 const LIMITE_DIAS = 1;
@@ -30,8 +39,30 @@ function moverArquivoParaTipo(arquivo) {
   const destino = path.join(destinoDir, arquivo);
 
   fs.rename(origem, destino, (err) => {
-    if (err) console.error(`Erro movendo ${arquivo}:`, err);
-    else console.log(`📦 Movido: ${arquivo} → /${ext}`);
+    if (!err) {
+      console.log(`📦 Movido: ${arquivo} → /${ext}`);
+      return;
+    }
+
+    if (err.code !== "EXDEV") {
+      console.error(`Erro movendo ${arquivo}:`, err);
+      return;
+    }
+
+    fs.copyFile(origem, destino, fs.constants.COPYFILE_EXCL, (copyError) => {
+      if (copyError) {
+        console.error(`Erro copiando ${arquivo}:`, copyError);
+        return;
+      }
+
+      fs.unlink(origem, (unlinkError) => {
+        if (unlinkError) {
+          console.error(`Arquivo copiado, mas não removido da origem ${arquivo}:`, unlinkError);
+          return;
+        }
+        console.log(`📦 Movido entre volumes: ${arquivo} → /${ext}`);
+      });
+    });
   });
 }
 
